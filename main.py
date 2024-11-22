@@ -11,7 +11,7 @@ from pdf_summarizer import get_summaries
 
 load_dotenv()
 
-lm_studio_llm = LMStudioLLM(path='completions')
+lm_studio_llm = LMStudioLLM(path='complsetions')
 
 llm_chain_file = RunnableSequence(
     translation_template() | 
