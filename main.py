@@ -11,18 +11,24 @@ from pdf_summarizer import get_summaries
 
 load_dotenv()
 
-lm_studio_llm = LMStudioLLM(path='complsetions')
+lm_studio_llm = LMStudioLLM(path='completions')
 
 llm_chain_file = RunnableSequence(
     translation_template() | 
+    lm_studio_llm |
+    (lambda translation_output: {
+        'routing_output': routing_template().format(
+            question=question['question'],  
+            file_summaries=file_summaries  
+        ),
+        'translation_output': translation_output
+    }) | 
     lm_studio_llm | 
-    (lambda output: routing_template().format(
-        translated_questions=output,  
-        file_summaries=file_summaries  
+    (lambda outputs: indexing_template().format(
+        routing_output=outputs['routing_output'], 
+        translation_output=outputs['translation_output']
     )) | 
-    lm_studio_llm 
-    # indexing_template() | 
-    # lm_studio_llm | 
+    lm_studio_llm
     # retrieval_template() | 
     # lm_studio_llm | 
     # generation_template()
@@ -50,4 +56,4 @@ else:
         'file_summaries': file_summaries
     })
 
-print(answer) 
+print(answer)
