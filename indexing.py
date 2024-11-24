@@ -6,6 +6,7 @@ from lm_studio import LMStudioLLM
 from PyPDF2 import PdfReader
 import ast, re
 from langchain.schema import Document
+from langchain_community.embeddings import GPT4AllEmbeddings
 
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size = 300,
@@ -35,22 +36,46 @@ def split_documents(documents):
     return splits  # Already flattened
 
 def get_unique_splits(splits):
-    # flatten list of splits from all questions
-    flattened_splits = [split for split in splits]
-    # Get unique splits
-    unqiue_splits = list(set(flattened_splits))
-    return unqiue_splits
+    # Flatten list of splits from all questions
+    unique_splits = {}
+    for split in splits:
+        # Use `page_content` as the key to ensure uniqueness
+        unique_splits[split.page_content] = split
+    return list(unique_splits.values())
+
 
 # @traceable
 def indexing_template():
     def process_questions_and_documents(documents, questions):
+        # Get the list of files from the output in the form of a string
         documents = re.search(r'\[.*?\]', documents).group()
         print(documents)
-        splits = split_documents(ast.literal_eval(documents)) # Convert the string representation of list to a list
-        vectorstore = Chroma.from_documents(documents=splits, embedding=LMStudioLLM(path='embeddings'))
+        splits = split_documents(ast.literal_eval(documents))  # Convert string list to actual list
+        print(splits)
+
+        # Create a Chroma vector store
+        vectorstore = Chroma.from_documents(documents=splits, embedding=GPT4AllEmbeddings())
         retriever = vectorstore.as_retriever()
 
-        retrieval_chain = questions | retriever.map() | get_unique_splits
-        return retrieval_chain.invoke()
-    
+        # Define the retrieval chain
+        def retrieval_chain(questions):
+            retrieved_docs = []
+            for question in questions:
+                docs = retriever.invoke(question)
+                retrieved_docs.extend(docs)
+            return get_unique_splits(retrieved_docs)
+
+        # Invoke the chain with the questions
+        results = retrieval_chain(questions)
+        return results
+
     return process_questions_and_documents
+
+# indexing_template()(
+#         documents='["1", "2"]', 
+#         questions="""
+# 1: [{'summary_text': 'The sentiment analysis task has been performed by collecting the dataset from the publically available sources. A new reliable dataset is then subject to various pre -processing techniques and then the feature extraction techniques. The results are passed to the deep learning technique s out of which global vectors ( glovec) have the highest accu racy of 75%.'}]
+# 2: [{'summary_text': 'The contemporary work is done as slice of the shared task inSentiment Analysis in Indian Languages (SAIL 2015), constrained vari-ety. Social media allows people to create and share or exchange opinionsbased on many perspectives. A supervised algorithm is used for clas-sifying the tweets into positive, negative and neutral labels.'}]
+# 3: [{'summary_text': 'This system holds an edge over the current rating system of star values by providing the users with a more precise and descriptive result. The main disadvantage of thestar system is that it does not provide enough choice to the user. The methodology in this paper, named ARAS or Automated Review Analyzing System,overcomes this issue by using sentiment analysis.'}]
+# """
+#     )

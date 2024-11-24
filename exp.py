@@ -41,11 +41,13 @@ llm_chain_file = RunnableSequence(
         file_summaries=file_summaries  
     )) | 
     lm_studio_llm | 
-    (lambda doc_list: indexing_template()(
-        documents=doc_list, 
-        questions=translation_output  
-    )) | 
-    lm_studio_llm
+    (lambda doc_list: [
+        doc.page_content for doc in indexing_template()(
+            documents=doc_list,
+            questions=translation_output  
+        )
+    ]) |
+    retrieval_template
 )
 
 # Define llm_chain_no_file
@@ -62,5 +64,4 @@ else:
         'file_summaries': file_summaries
     })
 
-# Print final answer
 print(answer)
