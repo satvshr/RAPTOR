@@ -9,9 +9,11 @@ from langchain.schema import Document
 from langchain_community.embeddings import GPT4AllEmbeddings
 
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-    chunk_size = 300,
-    chunk_overlap=50
+    chunk_size = 200,
+    chunk_overlap = 50
 )
+
+top_k = 3  # Maximum splits to retrieve per question
 
 def extract_text_from_pdf(pdf_path):
     reader = PdfReader(pdf_path)
@@ -35,6 +37,12 @@ def split_documents(documents):
 
     return splits  # Already flattened
 
+def extract_questions(text):
+    # Match all substrings ending with a question mark
+    questions = re.findall(r'[^?]*\?+', text)
+    # Strip leading/trailing whitespace from each question
+    return [q.strip() for q in questions]
+
 def get_unique_splits(splits):
     # Flatten list of splits from all questions
     unique_splits = {}
@@ -49,9 +57,7 @@ def indexing_template():
     def process_questions_and_documents(documents, questions):
         # Get the list of files from the output in the form of a string
         documents = re.search(r'\[.*?\]', documents).group()
-        print(documents)
         splits = split_documents(ast.literal_eval(documents))  # Convert string list to actual list
-        print(splits)
 
         # Create a Chroma vector store
         vectorstore = Chroma.from_documents(documents=splits, embedding=GPT4AllEmbeddings())
@@ -60,22 +66,17 @@ def indexing_template():
         # Define the retrieval chain
         def retrieval_chain(questions):
             retrieved_docs = []
+            questions = extract_questions(questions)
+
             for question in questions:
-                docs = retriever.invoke(question)
+                print(question)
+                docs = retriever.invoke(question)[:top_k]
                 retrieved_docs.extend(docs)
             return get_unique_splits(retrieved_docs)
 
         # Invoke the chain with the questions
         results = retrieval_chain(questions)
+        print(len(results))
         return results
 
     return process_questions_and_documents
-
-# indexing_template()(
-#         documents='["1", "2"]', 
-#         questions="""
-# 1: [{'summary_text': 'The sentiment analysis task has been performed by collecting the dataset from the publically available sources. A new reliable dataset is then subject to various pre -processing techniques and then the feature extraction techniques. The results are passed to the deep learning technique s out of which global vectors ( glovec) have the highest accu racy of 75%.'}]
-# 2: [{'summary_text': 'The contemporary work is done as slice of the shared task inSentiment Analysis in Indian Languages (SAIL 2015), constrained vari-ety. Social media allows people to create and share or exchange opinionsbased on many perspectives. A supervised algorithm is used for clas-sifying the tweets into positive, negative and neutral labels.'}]
-# 3: [{'summary_text': 'This system holds an edge over the current rating system of star values by providing the users with a more precise and descriptive result. The main disadvantage of thestar system is that it does not provide enough choice to the user. The methodology in this paper, named ARAS or Automated Review Analyzing System,overcomes this issue by using sentiment analysis.'}]
-# """
-#     )
