@@ -1,19 +1,18 @@
 from langsmith import Client as traceable
-from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from lm_studio import LMStudioLLM
 from PyPDF2 import PdfReader
 import ast, re
 from langchain.schema import Document
 from langchain_community.embeddings import GPT4AllEmbeddings
+from utils.find_documents import find_documents
 
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size = 200,
     chunk_overlap = 50
 )
 
-top_k = 3  # Maximum splits to retrieve per question
+top_k = 7  # Maximum splits to retrieve to answer the question
 
 def extract_text_from_pdf(pdf_path):
     reader = PdfReader(pdf_path)
@@ -65,14 +64,9 @@ def indexing_template():
 
         # Define the retrieval chain
         def retrieval_chain(questions):
-            retrieved_docs = []
             questions = extract_questions(questions)
-
-            for question in questions:
-                print(question)
-                docs = retriever.invoke(question)[:top_k]
-                retrieved_docs.extend(docs)
-            return get_unique_splits(retrieved_docs)
+            sorted_docs = find_documents(retriever, questions)
+            return get_unique_splits(sorted_docs)[:top_k]
 
         # Invoke the chain with the questions
         results = retrieval_chain(questions)

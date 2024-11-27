@@ -1,13 +1,13 @@
 from dotenv import load_dotenv
 from langchain.schema.runnable import RunnableSequence
-from lm_studio import LMStudioLLM
-from translation import translation_template
-from routing import routing_template
-from indexing import indexing_template
-from retrieval import retrieval_template
-from generation import generation_template
+from utils.lm_studio import LMStudioLLM
+from src.translation import translation_template
+from src.routing import routing_template
+from src.indexing import indexing_template
+from src.retrieval import retrieval_template
+from src.generation import generation_template
 
-from pdf_summarizer import get_summaries
+from utils.pdf_summarizer import get_summaries
 
 load_dotenv()
 
