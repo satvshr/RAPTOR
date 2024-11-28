@@ -30,6 +30,6 @@ def find_documents(retriever, questions):
 
     # Sort by similarity score in descending order
     doc_cosine_pairs = sorted(doc_cosine_pairs, key=lambda x: x[1], reverse=True)
-    sorted_docs = [doc for doc, _ in doc_cosine_pairs if doc not in doc_cosine_pairs]
+    sorted_docs = [doc for doc, _ in doc_cosine_pairs]
 
     return sorted_docs
