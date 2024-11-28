@@ -43,13 +43,13 @@ def extract_questions(text):
     return [q.strip() for q in questions]
 
 def get_unique_splits(splits):
-    # Flatten list of splits from all questions
-    unique_splits = {}
+    seen = set()
+    unique_splits = []
     for split in splits:
-        # Use `page_content` as the key to ensure uniqueness
-        unique_splits[split.page_content] = split
-    return list(unique_splits.values())
-
+        if split not in seen:
+            unique_splits.append(split)
+            seen.add(split)
+    return unique_splits
 
 # @traceable
 def indexing_template():
@@ -57,20 +57,27 @@ def indexing_template():
         # Get the list of files from the output in the form of a string
         documents = re.search(r'\[.*?\]', documents).group()
         splits = split_documents(ast.literal_eval(documents))  # Convert string list to actual list
-
         # Create a Chroma vector store
         vectorstore = Chroma.from_documents(documents=splits, embedding=GPT4AllEmbeddings())
-        retriever = vectorstore.as_retriever()
 
         # Define the retrieval chain
         def retrieval_chain(questions):
             questions = extract_questions(questions)
-            sorted_docs = find_documents(retriever, questions)
+            sorted_docs = find_documents(vectorstore, questions)
             return get_unique_splits(sorted_docs)[:top_k]
 
         # Invoke the chain with the questions
         results = retrieval_chain(questions)
-        print(len(results))
+
         return results
 
     return process_questions_and_documents
+
+indexing_template()(
+    "['1', '2']",
+    """
+    What does Twitter sentiment analysis look like in practice?
+    How can we use Twitter sentiment analysis?
+    What is twitter sentiment analysis?
+    """ 
+)
