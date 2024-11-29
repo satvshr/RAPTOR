@@ -8,11 +8,11 @@ from langchain_community.embeddings import GPT4AllEmbeddings
 from utils.find_documents import find_documents
 
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-    chunk_size = 200,
+    chunk_size = 300,
     chunk_overlap = 50
 )
 
-top_k = 7  # Maximum splits to retrieve to answer the question
+top_k = 8  # Maximum splits to retrieve to answer the question
 
 def extract_text_from_pdf(pdf_path):
     reader = PdfReader(pdf_path)
@@ -66,7 +66,7 @@ def indexing_template():
             sorted_docs = find_documents(vectorstore, questions)
             return get_unique_splits(sorted_docs)[:top_k]
 
-        # Invoke the chain with the questions
+        # Invoke the chain with the questions and recieve a list as output
         results = retrieval_chain(questions)
 
         return results
