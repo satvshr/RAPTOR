@@ -1,25 +1,16 @@
 from langsmith import Client as traceable
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from PyPDF2 import PdfReader
 import ast, re
 from langchain.schema import Document
-from langchain_community.embeddings import GPT4AllEmbeddings
 from utils.find_documents import find_documents
-
-text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-    chunk_size = 300,
-    chunk_overlap = 50
-)
-
-top_k = 8  # Maximum splits to retrieve to answer the question
 
 def extract_text_from_pdf(pdf_path):
     reader = PdfReader(pdf_path)
     return " ".join([page.extract_text() for page in reader.pages])
 
 # Input in the format [file names, ...]
-def split_documents(documents):
+def split_documents(documents, text_splitter):
     # List to store splits of all documents
     splits = []
 
@@ -53,17 +44,17 @@ def get_unique_splits(splits):
 
 # @traceable
 def indexing_template():
-    def process_questions_and_documents(documents, questions):
+    def process_questions_and_documents(documents, questions, text_splitter, embedder, top_k):
         # Get the list of files from the output in the form of a string
         documents = re.search(r'\[.*?\]', documents).group()
-        splits = split_documents(ast.literal_eval(documents))  # Convert string list to actual list
+        splits = split_documents(ast.literal_eval(documents), text_splitter)  # Convert string list to actual list
         # Create a Chroma vector store
-        vectorstore = Chroma.from_documents(documents=splits, embedding=GPT4AllEmbeddings())
+        vectorstore = Chroma.from_documents(documents=splits, embedding=embedder)
 
         # Define the retrieval chain
         def retrieval_chain(questions):
             questions = extract_questions(questions)
-            sorted_docs = find_documents(vectorstore, questions)
+            sorted_docs = find_documents(vectorstore, questions, embedder)
             return get_unique_splits(sorted_docs)[:top_k]
 
         # Invoke the chain with the questions and recieve a list as output
@@ -72,12 +63,3 @@ def indexing_template():
         return results
 
     return process_questions_and_documents
-
-indexing_template()(
-    "['1', '2']",
-    """
-    What does Twitter sentiment analysis look like in practice?
-    How can we use Twitter sentiment analysis?
-    What is twitter sentiment analysis?
-    """ 
-)

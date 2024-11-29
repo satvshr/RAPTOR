@@ -1,6 +1,9 @@
 from dotenv import load_dotenv
 from langchain.schema.runnable import RunnableSequence
 from utils.lm_studio import LMStudioLLM
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import GPT4AllEmbeddings
+
 from src.translation import translation_template
 from src.routing import routing_template
 from src.indexing import indexing_template
@@ -13,8 +16,14 @@ from utils.pdf_summarizer import get_summaries
 # Load environment variables
 load_dotenv()
 
-# Initialize LLM
+# Initialize LLM, number of splits to retrieve, text splitter, and the embedder
 lm_studio_llm = LMStudioLLM(path='completions')
+top_k = 7
+text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+    chunk_size = 300,
+    chunk_overlap = 50
+)
+embedder = GPT4AllEmbeddings()
 
 # Input question
 question = {'question': "What is twitter sentiment analysis?"}
@@ -42,12 +51,13 @@ llm_chain_file = RunnableSequence(
         file_summaries=file_summaries  
     )) | 
     lm_studio_llm | 
-    (lambda doc_list: [
-        doc.page_content for doc in indexing_template()(
-            documents=doc_list,
-            questions=translation_output  
-        )
-    ]) 
+    (lambda doc_list: indexing_template()(
+        documents=doc_list,
+        questions=translation_output,
+        text_splitter=text_splitter,
+        embedder=embedder,
+        top_k=top_k
+    ))
 )
 
 # Define llm_chain_no_file

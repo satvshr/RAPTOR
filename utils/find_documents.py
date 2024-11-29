@@ -1,9 +1,6 @@
-from langchain_community.embeddings import GPT4AllEmbeddings
 import numpy as np
 
-embedder = GPT4AllEmbeddings()
-
-def cosine_similarity_search(vectorstore, embedded_question):
+def cosine_similarity_search(vectorstore, embedded_question, embedder):
     # List to store cosine similarity scores in the (doc, similarity) format
     doc_cosine_pair = []
     documents = vectorstore.get()['documents']
@@ -20,12 +17,12 @@ def cosine_similarity_search(vectorstore, embedded_question):
     
     return doc_cosine_pair
 
-def find_documents(retriever, questions):
+def find_documents(vectorstore, questions, embedder):
     # Universal list for all doc-cosine pairs for all questions
     doc_cosine_pairs = []
     for question in questions:
         embedded_question = embedder.embed_query(question)
-        doc_cosine_pair_per_q = cosine_similarity_search(retriever, embedded_question)
+        doc_cosine_pair_per_q = cosine_similarity_search(vectorstore, embedded_question, embedder)
         doc_cosine_pairs.extend(doc_cosine_pair_per_q)
 
     # Sort by similarity score in descending order
