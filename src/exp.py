@@ -18,7 +18,8 @@ load_dotenv()
 
 # Initialize LLM, number of splits to retrieve, text splitter, and the embedder
 lm_studio_llm = LMStudioLLM(path='completions')
-top_k = 7
+top_k_indexing = 30
+top_k_raptor = 5
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size = 300,
     chunk_overlap = 50
@@ -51,13 +52,19 @@ llm_chain_file = RunnableSequence(
         file_summaries=file_summaries  
     )) | 
     lm_studio_llm | 
-    (lambda doc_list: indexing_template()(
-        documents=doc_list,
+    (lambda doc_name_list: indexing_template()(
+        documents=doc_name_list,
         questions=translation_output,
         text_splitter=text_splitter,
         embedder=embedder,
-        top_k=top_k
-    ))
+        top_k=top_k_indexing
+    )) |
+    (lambda splits_list: raptor_template()(
+        doc_splits=splits_list,
+        embedder=embedder,
+        top_k=top_k_raptor
+    )
+     )
 )
 
 # Define llm_chain_no_file
