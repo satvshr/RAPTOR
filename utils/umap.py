@@ -30,13 +30,11 @@ def get_probablities(neighbours, n_nodes):
         while True:
             distances = np.array([y for _, y in neighbours_i])
             probablities_sum = np.sum(np.exp(-distances / scaling_factor))
-            print(probablities_sum, abs(probablities_sum - target))
             if abs(probablities_sum - target) > tolerance:
                 # Adjust scaling_factor based on whether the sum is above or below the target
-                scaling_factor = (scaling_factor - step) if (probablities_sum - target) < 0 else (scaling_factor + step)
+                scaling_factor = (scaling_factor + step) if (probablities_sum - target) < 0 else (scaling_factor - step)
                 iterations += 1
-                if iterations >= max_iterations:
-                    print("Max iterations reached. Scaling factor may not have converged.")
+                if iterations == max_iterations:
                     break
             else:
                 break
