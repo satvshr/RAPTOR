@@ -3,6 +3,7 @@ from utils.umap import umap
 
 k_global = 30
 k_local = 5
+
 # @traceable
 def raptor_template():
     def raptor(doc_splits, embedder, top_k):
