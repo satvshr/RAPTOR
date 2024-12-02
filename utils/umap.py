@@ -64,14 +64,32 @@ def get_probablities(neighbours, n_nodes):
     probablities = symmetrize_probablities(probablities)
     return np.array(probablities)  
 
-def umap(doc_splits, embedder, k):
+def lower_dim(probablities, n_nodes, dim, epochs=500, lr=0.1):
+    # Matrix of the lower-dim embeddings randomly initialized of size (data points, desired dim)
+    low_dim_matrix = np.random.uniform(low=-1, high=1, size=(n_nodes, dim))
+    for _ in range(epochs):
+        for i in range(n_nodes):
+            # grad will be of the same shape as low_dim_matrix
+            grad = np.zeros_like(low_dim_matrix[0])
+            for j in range(n_nodes):
+                if i != j:
+                    distance = np.linalg.norm(low_dim_matrix[i] - low_dim_matrix[j])
+                    q_ij = 1 / (1 + distance**2)
+                    grad += 2 * (probablities[i, j] - q_ij) * ((low_dim_matrix[i] - low_dim_matrix[j])/(1 + distance**2)) # sum up gradient of loss wrt low dimension matrix
+
+            low_dim_matrix[i] += lr * grad
+    return low_dim_matrix
+
+def umap(doc_splits, embedder, k, dim):
     # Convert to np array for computation speed
     vectorized_splits = np.array(embedder.embed_documents(doc_splits))
     n_nodes = vectorized_splits.shape[0]
     distances = euclidian_distances(vectorized_splits, n_nodes)
     # Select k-nearest neighbours based on distances
     neighbours = get_neighbours(distances, n_nodes, k)
-    # Get the probablities of i being a meaningful enighbour of j for k-nearest neighbours
-    get_probablities(neighbours, n_nodes)
-
-umap(['a', 'b', 'c', 'd'], GPT4AllEmbeddings(), 2)
+    # Get the probablities of i being a meaningful neighbour of j for k-nearest neighbours
+    probablities = get_probablities(neighbours, n_nodes)
+    # Get lower dimension probablities
+    probablities = lower_dim(probablities, n_nodes, dim)
+    print(probablities)
+umap(['a', 'b', 'c', 'd'], GPT4AllEmbeddings(), 2, 160)
