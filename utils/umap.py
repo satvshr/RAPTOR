@@ -1,5 +1,4 @@
 import numpy as np
-from langchain_community.embeddings import GPT4AllEmbeddings
 
 def euclidian_distances(vectors, n_nodes):
     # Will be a square symmetric matrix with diagonals being infinity so that the points never fall under the k-nearest threshold
@@ -74,8 +73,8 @@ def lower_dim(probabilities, n_nodes, dim, epochs=500, lr=0.1):
             for j in range(n_nodes):
                 if i != j:
                     distance = np.linalg.norm(low_dim_matrix[i] - low_dim_matrix[j])
-                    q_ij = 1 / (1 + distance**2)
-                    grad += 2 * (probabilities[i, j] - q_ij) * ((low_dim_matrix[i] - low_dim_matrix[j])/(1 + distance**2)) # sum up gradient of loss wrt low dimension matrix
+                    q_ij = 1 / (1 + distance**2) # probabilities of i and j but in the lower dimension
+                    grad += 2 * (probabilities[i, j] - q_ij) * ((low_dim_matrix[i] - low_dim_matrix[j])/(1 + distance**2)) # sum up gradient of loss wrt embeddings of point i
 
             low_dim_matrix[i] += lr * grad
     return low_dim_matrix
