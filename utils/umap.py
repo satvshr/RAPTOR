@@ -23,16 +23,16 @@ def get_neighbours(distances, n_nodes, k):
 
     return neighbours
 
-def get_probablities(neighbours, n_nodes):
+def get_probabilities(neighbours, n_nodes):
     def find_scaling_factor(neighbours_i, target=1.0, tolerance=0.05, step=0.01, max_iterations=1000):
         scaling_factor = 1.0  # Initialization
         iterations = 0
         while True:
             distances = np.array([y for _, y in neighbours_i])
-            probablities_sum = np.sum(np.exp(-distances / scaling_factor))
-            if abs(probablities_sum - target) > tolerance:
+            probabilities_sum = np.sum(np.exp(-distances / scaling_factor))
+            if abs(probabilities_sum - target) > tolerance:
                 # Adjust scaling_factor based on whether the sum is above or below the target
-                scaling_factor = (scaling_factor + step) if (probablities_sum - target) < 0 else (scaling_factor - step)
+                scaling_factor = (scaling_factor + step) if (probabilities_sum - target) < 0 else (scaling_factor - step)
                 iterations += 1
                 if iterations == max_iterations:
                     break
@@ -40,31 +40,31 @@ def get_probablities(neighbours, n_nodes):
                 break
         return scaling_factor
     
-    def symmetrize_probablities(probablities):
-        symmetric_probabilities = np.zeros_like(probablities)
+    def symmetrize_probabilities(probabilities):
+        symmetric_probabilities = np.zeros_like(probabilities)
 
         for i in range(n_nodes):
             for j in range(n_nodes):
-                symmetric_probabilities[i, j] = probablities[i, j] + probablities[j, i] - (probablities[i, j] * probablities[j, i])
+                symmetric_probabilities[i, j] = probabilities[i, j] + probabilities[j, i] - (probabilities[i, j] * probabilities[j, i])
 
         return symmetric_probabilities
 
     # Will be a square symmetric matrix with diagonals and points not falling under the k-point threshold being 0
-    probablities = np.zeros((n_nodes, n_nodes))
-    # Find probablities between points    
+    probabilities = np.zeros((n_nodes, n_nodes))
+    # Find probabilities between points    
     for i in range(n_nodes):
         scaling_factor = find_scaling_factor(neighbours[i])
         for j in range(n_nodes):
             if i != j:  # Same nodes
                 distance = next((y for x, y in neighbours[i] if x == j), None)
                 if distance is not None:
-                    probablities[i, j] = np.exp(-distance / scaling_factor)
+                    probabilities[i, j] = np.exp(-distance / scaling_factor)
                 else:
-                    probablities[i, j] = 0.0
-    probablities = symmetrize_probablities(probablities)
-    return np.array(probablities)  
+                    probabilities[i, j] = 0.0
+    probabilities = symmetrize_probabilities(probabilities)
+    return np.array(probabilities)  
 
-def lower_dim(probablities, n_nodes, dim, epochs=500, lr=0.1):
+def lower_dim(probabilities, n_nodes, dim, epochs=500, lr=0.1):
     # Matrix of the lower-dim embeddings randomly initialized of size (data points, desired dim)
     low_dim_matrix = np.random.uniform(low=-1, high=1, size=(n_nodes, dim))
     for _ in range(epochs):
@@ -75,7 +75,7 @@ def lower_dim(probablities, n_nodes, dim, epochs=500, lr=0.1):
                 if i != j:
                     distance = np.linalg.norm(low_dim_matrix[i] - low_dim_matrix[j])
                     q_ij = 1 / (1 + distance**2)
-                    grad += 2 * (probablities[i, j] - q_ij) * ((low_dim_matrix[i] - low_dim_matrix[j])/(1 + distance**2)) # sum up gradient of loss wrt low dimension matrix
+                    grad += 2 * (probabilities[i, j] - q_ij) * ((low_dim_matrix[i] - low_dim_matrix[j])/(1 + distance**2)) # sum up gradient of loss wrt low dimension matrix
 
             low_dim_matrix[i] += lr * grad
     return low_dim_matrix
@@ -87,9 +87,8 @@ def umap(doc_splits, embedder, k, dim):
     distances = euclidian_distances(vectorized_splits, n_nodes)
     # Select k-nearest neighbours based on distances
     neighbours = get_neighbours(distances, n_nodes, k)
-    # Get the probablities of i being a meaningful neighbour of j for k-nearest neighbours
-    probablities = get_probablities(neighbours, n_nodes)
-    # Get lower dimension probablities
-    probablities = lower_dim(probablities, n_nodes, dim)
-    print(probablities)
-umap(['a', 'b', 'c', 'd'], GPT4AllEmbeddings(), 2, 160)
+    # Get the probabilities of i being a meaningful neighbour of j for k-nearest neighbours
+    probabilities = get_probabilities(neighbours, n_nodes)
+    # Get lower dimension probabilities
+    probabilities = lower_dim(probabilities, n_nodes, dim)
+    return probabilities
