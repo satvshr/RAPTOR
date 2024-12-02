@@ -39,6 +39,15 @@ def get_probablities(neighbours, n_nodes):
             else:
                 break
         return scaling_factor
+    
+    def symmetrize_probablities(probablities):
+        symmetric_probabilities = np.zeros_like(probablities)
+
+        for i in range(n_nodes):
+            for j in range(n_nodes):
+                symmetric_probabilities[i, j] = probablities[i, j] + probablities[j, i] - (probablities[i, j] * probablities[j, i])
+
+        return symmetric_probabilities
 
     # Will be a square symmetric matrix with diagonals and points not falling under the k-point threshold being 0
     probablities = np.zeros((n_nodes, n_nodes))
@@ -52,8 +61,8 @@ def get_probablities(neighbours, n_nodes):
                     probablities[i, j] = np.exp(-distance / scaling_factor)
                 else:
                     probablities[i, j] = 0.0
-    print(probablities)
-    return probablities  
+    probablities = symmetrize_probablities(probablities)
+    return np.array(probablities)  
 
 def umap(doc_splits, embedder, k):
     # Convert to np array for computation speed
