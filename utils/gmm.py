@@ -11,7 +11,7 @@ def gmm(documents, n_classes):
     pi = random_numbers / np.sum(random_numbers)
 
     # Initialize means by randomly choosing data points
-    mean = random.sample(documents.tolist(), k=n_classes)  
+    mean = random.sample(documents.tolist(), k=n_classes)  # Convert documents to list
     print("mean: ", np.array(mean).shape)
 
     # Initialize covariance matrices by assigning each one as an identity matrix of size (classes, dim, dim)
@@ -19,22 +19,28 @@ def gmm(documents, n_classes):
     print("cov: ", cov.shape)
     # Compute responsibilities
     def expectation(documents, n_classes, pi, mean, cov):
-        dif = np.empty([n_classes, size])
+        dif = np.empty([n_classes, size, dim])
         mahalanobis = np.empty([n_classes, size])
+        exp = np.empty_like(mahalanobis)
+        N = np.empty_like(exp)
+        gaussian = np.empty_like(N)
+        responsibility = np.empty_like(gaussian)
 
         for i in range(n_classes):
+            normalization_constant = 1 / (((2 * np.pi) ** (dim/2)) * np.sqrt(np.linalg.det(cov[i])))
+            gaussian_sum = 0 # Sum of gaussian for point j across all i classes
+
             for j in range(size): # To indicate each data point
-                dif[i, j] = documents[j] - mean[i]
+                dif[i, j] = np.array(documents[j] - mean[i])
                 print("dif: ", dif.shape)
-                mahalanobis[i, j] = np.transpose(dif[i, j]) * np.linalg.inv(cov[i]) * dif[i, j]
-                normalization_constant = 1 / (((2 * np.pi) ** dim/2) * np.sqrt(np.linalg.det(cov)))
-                exp = np.exp(-1/2 * mahalanobis)
+                mahalanobis[i, j] = np.dot(np.dot(dif[i, j].T, np.linalg.inv(cov[i])), dif[i, j])
+                exp[i, j] = np.exp(-1/2 * mahalanobis[i, j])
 
-                N = normalization_constant * exp
-                gaussian = pi * N
-                gaussian_sum = np.sum(gaussian)
+                N[i, j] = normalization_constant * exp[i, j]
+                gaussian[i, j] = pi[i] * N[i, j]
+                gaussian_sum += gaussian[i, j]
 
-                responsibility = gaussian / gaussian_sum
+                responsibility[i, j] = gaussian[i, j] / gaussian_sum
         print(responsibility)
         return responsibility
     expectation(documents, n_classes, pi, mean, cov)
