@@ -15,10 +15,17 @@ def gmm(documents, n_classes):
     print("mean: ", np.array(mean).shape)
 
     # Initialize covariance matrices by assigning each one as an identity matrix of size (classes, dim, dim)
-    cov  = np.tile(np.identity(n_classes), (n_classes, 1, 1))
+    cov  = np.tile(np.identity(dim), (n_classes, 1, 1))
     print("cov: ", cov.shape)
     # Compute responsibilities
-    def expectation(documents, n_classes, pi, mean, cov):
+    def expectation(n_classes, pi, mean, cov):
+        def get_gaussian_sum(gaussian):
+            gaussian_sums = np.zeros([size]) # Sum of gaussian for (all)point j across all i classes
+            for i in range(size):
+                for j in range(n_classes):
+                    gaussian_sums[i] += gaussian[j, i]
+            return gaussian_sums
+        
         dif = np.empty([n_classes, size, dim])
         mahalanobis = np.empty([n_classes, size])
         exp = np.empty_like(mahalanobis)
@@ -28,7 +35,6 @@ def gmm(documents, n_classes):
 
         for i in range(n_classes):
             normalization_constant = 1 / (((2 * np.pi) ** (dim/2)) * np.sqrt(np.linalg.det(cov[i])))
-            gaussian_sum = 0 # Sum of gaussian for point j across all i classes
 
             for j in range(size): # To indicate each data point
                 dif[i, j] = np.array(documents[j] - mean[i])
@@ -38,11 +44,15 @@ def gmm(documents, n_classes):
 
                 N[i, j] = normalization_constant * exp[i, j]
                 gaussian[i, j] = pi[i] * N[i, j]
-                gaussian_sum += gaussian[i, j]
+        print("gaussian", gaussian)
+        gaussian_sums = get_gaussian_sum(gaussian)
+        print(gaussian_sums)
+        for i in range(n_classes):
+            for j in range(size):
+                responsibility[i, j] = gaussian[i, j] / gaussian_sums[j]
 
-                responsibility[i, j] = gaussian[i, j] / gaussian_sum
         print(responsibility)
         return responsibility
-    expectation(documents, n_classes, pi, mean, cov)
+    expectation(n_classes, pi, mean, cov)
 
-gmm(np.array([[1, 2],[2, 3],[3, 4],[4, 6]]), 2)
+gmm(np.array([[1, 2],[2, 3],[3, 4],[4, 6]]), 3)
