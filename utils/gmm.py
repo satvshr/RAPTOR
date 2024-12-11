@@ -64,10 +64,10 @@ def gmm(documents, n_classes):
         for i in range(n_classes):
             resp_sum = np.sum(responsibilities[i])
             new_pi[i] = resp_sum / size
-            print(dif[1].shape)
-            print("dot", [np.dot((responsibilities[i, j] * dif[i]), dif[i].T) for j in range(size)])
-            new_mean[i] = np.sum(np.vstack([responsibilities[i, j] * documents[j] for j in range(size)]), axis=0) / resp_sum
-            new_cov[i] = np.sum(np.vstack([np.dot((responsibilities[i, j] * dif[i, j]), dif[i, j].T) for j in range(size)]), axis=0) / resp_sum
+            print("dot", [responsibilities[i, j] * np.outer(dif[i, j], dif[i, j].T) for j in range(size)])
+            print("sum", np.sum([responsibilities[i, j] * np.outer(dif[i, j], dif[i, j].T) for j in range(size)]))
+            new_mean[i] = np.sum([responsibilities[i, j] * documents[j] for j in range(size)], axis=0) / resp_sum
+            new_cov[i] = np.sum([responsibilities[i, j] * np.outer(dif[i, j], dif[i, j].T) for j in range(size)], axis=0) / resp_sum
 
         return new_pi, new_mean, new_cov
     pi, mean, cov = maximization(responsiblity, dif)
@@ -75,4 +75,4 @@ def gmm(documents, n_classes):
     print("mean", mean)
     print("cov", cov)
 
-gmm(np.array([[1, 2],[2, 3],[3, 4],[4, 6]]), 3)
+gmm(np.array([[1, 7],[6, 4],[9, 14],[11, 12]]), 3)
