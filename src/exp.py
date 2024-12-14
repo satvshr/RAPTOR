@@ -5,7 +5,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import GPT4AllEmbeddings
 
 from src.translation import translation_template
-from src.routing import routing_template
+from src.routing import logical_routing_template, semantic_routing_template
 from src.indexing import indexing_template
 from src.raptor import raptor_template
 from src.retrieval import retrieval_template
@@ -47,10 +47,18 @@ if len(files) > 0:
 
 # Define llm_chain_file
 llm_chain_file = RunnableSequence(
-    (lambda question: routing_template().format(
-        question=question['question'],  
-        file_summaries=file_summaries  
-    )) | 
+    # Logical routing
+    # (lambda question: logical_routing_template().format(
+    #     question=question['question'],  
+    #     file_summaries=file_summaries  
+    # )) | 
+
+    # Semantic routing
+    (lambda: semantic_routing_template().format(
+        questions=translation_output,
+        file_summaries=file_summaries,
+        embedder=embedder
+    )) |
     lm_studio_llm | 
     (lambda doc_name_list: indexing_template()(
         documents=doc_name_list,
@@ -63,8 +71,7 @@ llm_chain_file = RunnableSequence(
         doc_splits=splits_list,
         embedder=embedder,
         top_k=top_k_raptor
-    )
-     )
+    ))
 )
 
 # Define llm_chain_no_file

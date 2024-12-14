@@ -1,8 +1,12 @@
 from langsmith import Client as traceable
 from langchain.prompts import PromptTemplate
+from utils.pdf_summarizer import get_summaries
+from langchain_community.embeddings import GPT4AllEmbeddings
+import numpy as np
 
 # @traceable
-def routing_template():
+# Logical routing
+def logical_routing_template():
     return PromptTemplate(
         input_variables=["question", "file_summaries"],
         template="""
@@ -17,4 +21,29 @@ def routing_template():
 
         Response:
         """
+)
+
+# Semantic routing
+def semantic_routing_template():
+    def choose_files(questions, file_summaries, embedder, threshold=0.35):
+        # summaries in the format [[file_name, summary], ..]
+        related_files = []
+        for question in questions:
+            embedded_question = embedder.embed_query(question)
+            for file in file_summaries:
+                content = file[1][0]['summary_text']
+                cosine = np.dot(embedder.embed_query(content), embedded_question) / np.linalg.norm(embedder.embed_query(content)) * np.linalg.norm(embedded_question)
+                if cosine > threshold:
+                    if file[0] not in related_files:
+                        related_files.append(file[0])
+        print(related_files)
+        return related_files
+        
+    return choose_files
+
+semantic_routing_template()(
+    file_summaries=get_summaries(["1", "2", "3"]),
+    questions=["How does one perform a Twitter sentiment analysis?",
+               "What is the purpose of sentiment analysis on Twitter?"],
+    embedder=GPT4AllEmbeddings()
 )
