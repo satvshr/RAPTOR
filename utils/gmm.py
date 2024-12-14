@@ -20,7 +20,6 @@ def gmm(documents, n_classes):
     # Initialize covariance matrices by assigning each one as an identity matrix of size (classes, dim, dim)
     cov  = np.tile(np.identity(dim), (n_classes, 1, 1))
     cov += np.eye(dim) * 1e-6
-
     print("cov: ", cov.shape)
 
     # Compute responsibilities
@@ -32,50 +31,55 @@ def gmm(documents, n_classes):
                     gaussian_sums[i] += gaussian[j, i]
             return gaussian_sums
         
-        dif = np.empty([n_classes, size, dim])
-        mahalanobis = np.empty([n_classes, size])
-        exp = np.empty_like(mahalanobis)
-        N = np.empty_like(exp)
-        gaussian = np.empty_like(N)
+        dif = np.zeros([n_classes, size, dim])
+        mahalanobis = np.zeros([n_classes, size])
+        exp = np.zeros_like(mahalanobis)
+        N = np.zeros_like(exp)
+        gaussian = np.zeros_like(N)
 
         for i in range(n_classes):
             determinant = np.linalg.det(cov[i])
-            determinant = max(determinant, 1e-10)  # Stabilize determinant
+            # determinant = max(determinant, 1e-10)  # Stabilize determinant
+            print("determinant", determinant)
             normalization_constant = 1 / (((2 * np.pi) ** (dim/2)) * np.sqrt(determinant))
 
-            for j in range(size): # To indicate each data point
+            for j in range(size): # each data point
                 dif[i, j] = np.array(documents[j] - mean[i])
                 mahalanobis[i, j] = np.dot(np.dot(dif[i, j].T, np.linalg.inv(cov[i])), dif[i, j])
-                mahalanobis[i, j] = np.clip(mahalanobis[i, j], -1e6, 1e6) # To prevent it from "exploding"
+                # mahalanobis[i, j] = np.clip(mahalanobis[i, j], -1e6, 1e6) # Just to avoid extreme values
 
-                exp[i, j] = np.exp(-1/2 * mahalanobis[i, j])
-                exp[i, j] = np.clip(exp[i, j], 1e-10, None)  # Prevent underflow
+                exp[i, j] = np.exp(-0.5 * mahalanobis[i, j])
+                # exp[i, j] = np.clip(exp[i, j], 1e-10, None)  # Prevent underflow
 
                 N[i, j] = normalization_constant * exp[i, j]
                 gaussian[i, j] = pi[i] * N[i, j]
 
         gaussian_sums = get_gaussian_sum(gaussian)
-        gaussian_sums = np.clip(gaussian_sums, 1e-10, None)
+        print("mahalanobis", mahalanobis)
+        print("Normalization constant", normalization_constant)
+        print("exp", exp)
+        print("N", N)
+        print("pi", pi)
+        print("gaussian", gaussian)
         print("gaussian_sums", gaussian_sums)
 
         for i in range(n_classes):
             for j in range(size):
                 responsibilities[i, j] = gaussian[i, j] / gaussian_sums[j]
-        print("mahalanobis", mahalanobis)
         return responsibilities, N, dif
 
     # Compute pi, mean, and cov using responsibilities obtained
     def maximization(responsibilities, dif):
-        new_pi = np.empty_like(pi, dtype=float)
-        new_mean = np.empty_like(mean, dtype=float)
-        new_cov = np.empty_like(cov, dtype=float)
+        new_pi = np.zeros_like(pi, dtype=float)
+        new_mean = np.zeros_like(mean, dtype=float)
+        new_cov = np.zeros_like(cov, dtype=float)
 
         for i in range(n_classes):
             resp_sum = np.sum(responsibilities[i])
             new_pi[i] = resp_sum / size
             new_mean[i] = np.sum([responsibilities[i, j] * documents[j] for j in range(size)], axis=0) / resp_sum
             new_cov[i] = np.sum([responsibilities[i, j] * np.outer(dif[i, j], dif[i, j].T) for j in range(size)], axis=0) / resp_sum
-            new_cov[i] += np.eye(dim) * 1e-6  # Regularize covariance matrix
+            # new_cov[i] += np.eye(dim) * 1e-6  # Regularize covariance
 
         return new_pi, new_mean, new_cov
 
@@ -85,40 +89,42 @@ def gmm(documents, n_classes):
             likelihood = 0
             for j in range(n_classes):
                 likelihood += pi[j] * N[j, i]
-            likelihood = max(likelihood, 1e-10)  # Prevent log(0)
+            # likelihood = max(likelihood, 1e-10)  # Prevent log(0)
             log_likelihood += np.log(likelihood)
-
         return log_likelihood
 
-    def EMAlgorithm(responsibilities, pi, mean, cov, max_itt=5, min_gain=1e-6):
-        log_likelihood = 0
-        _ = 0
+    def EMAlgorithm(responsibilities, pi, mean, cov, max_itt=2, min_gain=1e-6):
+        old_log_likelihood = None
         for _ in range(max_itt):
+            # E-step
             responsibilities, N, dif = expectation(pi, mean, cov)
-            print(responsibilities, N, dif)
-            print(111111)
+
+            # Compute log-likelihood after E-step
             log_likelihood = get_log_likelihood(N, pi)
             print("log_likelihood", log_likelihood)
-            print(2222222)
-            pi, mean, cov = maximization(responsibilities, dif)
-            print("pi", pi)
-            print("mean", mean)
-            print("cov", cov)
-            print(333333)
-            _, N, _ = expectation(pi, mean, cov)    
-            gain = get_log_likelihood(N, pi) - log_likelihood
-            print("gain", gain)
-            print(444444)      
-            # if gain < min_gain:
-            #     break
 
-        return pi, mean, cov, _
-    
-    pi, mean, cov, _ = EMAlgorithm(responsibilities, pi, mean, cov)
+            # Check for convergence
+            if old_log_likelihood is not None:
+                gain = log_likelihood - old_log_likelihood
+                print("gain", gain)
+                # if gain < min_gain:
+                #     break
+
+            # M-step
+            pi, mean, cov = maximization(responsibilities, dif)
+            print("M-pi", pi)
+            print("M-mean", mean)
+            print("M-cov", cov)
+
+            old_log_likelihood = log_likelihood
+
+        return pi, mean, cov
+
+    pi, mean, cov = EMAlgorithm(responsibilities, pi, mean, cov)
     print("Final pi", pi)
     print("Final mean", mean)
     print("Final cov", cov)
-    print(_)
+
 # Test the function with embeddings
 a = np.array(GPT4AllEmbeddings().embed_documents(["a", "b", "d", "e", "f"]))
 gmm(a, 3)
