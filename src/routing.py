@@ -3,7 +3,7 @@ from langchain.prompts import PromptTemplate
 from utils.pdf_summarizer import get_summaries
 from langchain_community.embeddings import GPT4AllEmbeddings
 import numpy as np
-
+from .indexing import extract_questions
 # @traceable
 # Logical routing
 def logical_routing_template():
@@ -27,7 +27,9 @@ def logical_routing_template():
 def semantic_routing_template():
     def choose_files(questions, file_summaries, embedder, threshold=0.35):
         # summaries in the format [[file_name, summary], ..]
+        # print(file_summaries)
         related_files = []
+        questions = extract_questions(questions)
         for question in questions:
             embedded_question = embedder.embed_query(question)
             for file in file_summaries:
@@ -40,10 +42,3 @@ def semantic_routing_template():
         return related_files
         
     return choose_files
-
-semantic_routing_template()(
-    file_summaries=get_summaries(["1", "2", "3"]),
-    questions=["How does one perform a Twitter sentiment analysis?",
-               "What is the purpose of sentiment analysis on Twitter?"],
-    embedder=GPT4AllEmbeddings()
-)

@@ -29,9 +29,9 @@ def split_documents(documents, text_splitter):
 
 def extract_questions(text):
     # Match all substrings ending with a question mark
-    questions = re.findall(r'[^?]*\?+', text)
+    questions = re.findall(r'(?:^\d+\.\s*)?(.*?\?+)', text, re.MULTILINE)
     # Strip leading/trailing whitespace from each question
-    return [q.strip() for q in questions]
+    return [q.strip() for q in questions if q.strip()]
 
 def get_unique_splits(splits):
     seen = set()
@@ -45,9 +45,12 @@ def get_unique_splits(splits):
 # @traceable
 def indexing_template():
     def process_questions_and_documents(documents, questions, text_splitter, embedder, top_k):
-        # Get the list of files from the output in the form of a string
-        documents = re.search(r'\[.*?\]', documents).group()
-        splits = split_documents(ast.literal_eval(documents), text_splitter)  # Convert string list to actual list
+        # Get the list of files from the output in the form of a string (for logical routing)
+        if isinstance(documents, str):
+            documents = re.search(r'\[.*?\]', documents).group()
+            splits = split_documents(ast.literal_eval(documents), text_splitter)  # Convert string list to actual list
+            
+        splits = split_documents(documents, text_splitter)
         # Create a Chroma vector store
         vectorstore = Chroma.from_documents(documents=splits, embedding=embedder)
 

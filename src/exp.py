@@ -3,9 +3,9 @@ from langchain.schema.runnable import RunnableSequence
 from utils.lm_studio import LMStudioLLM
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import GPT4AllEmbeddings
-
+from langchain.schema.runnable import RunnableLambda
 from src.translation import translation_template
-from src.routing import logical_routing_template, semantic_routing_template
+from src.routing import semantic_routing_template
 from src.indexing import indexing_template
 from src.raptor import raptor_template
 from src.retrieval import retrieval_template
@@ -18,7 +18,7 @@ load_dotenv()
 
 # Initialize LLM, number of splits to retrieve, text splitter, and the embedder
 lm_studio_llm = LMStudioLLM(path='completions')
-top_k_indexing = 30
+top_k_indexing = 50
 top_k_raptor = 5
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size = 300,
@@ -45,36 +45,40 @@ if len(files) > 0:
     summaries = get_summaries(files)
     file_summaries = "\n".join([f"{file}: {summary}" for file, summary in summaries])
 
-# Define llm_chain_file
+# Define llm_chain for file input
 llm_chain_file = RunnableSequence(
     # Logical routing
     # (lambda question: logical_routing_template().format(
     #     question=question['question'],  
     #     file_summaries=file_summaries  
     # )) | 
+    # lm_studio_llm |
 
     # Semantic routing
-    (lambda: semantic_routing_template().format(
+    RunnableLambda(lambda _: semantic_routing_template()(
         questions=translation_output,
-        file_summaries=file_summaries,
+        file_summaries=summaries,
         embedder=embedder
     )) |
-    lm_studio_llm | 
-    (lambda doc_name_list: indexing_template()(
+
+    # Indexing
+    RunnableLambda(lambda doc_name_list: indexing_template()(
         documents=doc_name_list,
         questions=translation_output,
         text_splitter=text_splitter,
         embedder=embedder,
         top_k=top_k_indexing
     )) |
-    (lambda splits_list: raptor_template()(
+
+    # Raptor retrieval
+    RunnableLambda(lambda splits_list: raptor_template()(
         doc_splits=splits_list,
         embedder=embedder,
         top_k=top_k_raptor
     ))
 )
 
-# Define llm_chain_no_file
+# Define llm_chain for no file input
 llm_chain_no_file = RunnableSequence(
     translation_template() | lm_studio_llm
 )
