@@ -55,7 +55,7 @@ def gmm(documents, n_clusters):
 
         for i in range(n_clusters):
             for j in range(size):
-                responsibilities[i, j] = gaussian[i, j] / gaussian_sums[j]
+                responsibilities[i, j] = gaussian[i, j] / (gaussian_sums[j] + 1e-12) # Prevent division by 0
         return responsibilities, N, dif
 
     # Compute pi, mean, and cov using responsibilities obtained
@@ -79,6 +79,8 @@ def gmm(documents, n_clusters):
             likelihood = 0
             for j in range(n_clusters):
                 likelihood += pi[j] * N[j, i]
+                likelihood = max(likelihood, 1e-12) # To ensure it is not zero
+
             log_likelihood += np.log(likelihood)
 
         return log_likelihood
