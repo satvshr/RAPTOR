@@ -18,7 +18,7 @@ load_dotenv()
 
 # Initialize LLM, number of splits to retrieve, text splitter, and the embedder
 lm_studio_llm = LMStudioLLM(path='completions')
-top_k_indexing = 150
+top_k_indexing = 40
 top_k_raptor = 5
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size = 300,
