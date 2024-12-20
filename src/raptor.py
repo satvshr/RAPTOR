@@ -3,29 +3,31 @@ from utils.gmm import gmm, get_optimal_clusters
 import numpy as np
 from langchain.prompts import PromptTemplate
 from utils.lm_studio import LMStudioLLM
-
-def summary_template():
-        return PromptTemplate(
-        input_variables=["cluster_text"],
-        template="""
-        System:
-        "You are a Summarizing Text Portal."
-
-        User:
-        "Write a summary of the following, including as many key details as possible: {cluster_text}"
-        """
-)
+from utils.pdf_summarizer import query
 
 def get_summaries(doc_splits, data_point_to_clusters):
     summaries = []
-    lm_studio_llm = LMStudioLLM(path='completions')
+    MAX_TOKENS = 3000
 
     for i in data_point_to_clusters:
+        # Summary conains all nodes seperated by a new line
         summary = "\n".join(doc_splits[node] for node in data_point_to_clusters[i])
-        summary_result = summary_template() | lm_studio_llm
-        summary_output = summary_result.invoke(summary)
-        summaries.append(summary_output)
-    
+        print("len summary ", len(summary))
+        n_summary_bits = len(summary) // MAX_TOKENS
+        print(n_summary_bits)
+        # loop to summarize a clusters summary using looping
+        if n_summary_bits > 0:
+            for i in range(n_summary_bits):
+                bits_summaries = []
+                bits_summaries.append(query({"inputs": summary[:MAX_TOKENS]}))
+                summary = summary[MAX_TOKENS:]
+                print(len(summary))
+            bits_summaries.append(query({"inputs": summary})) # For the remaining tokens whose len < MAX_TOKENS
+            print(bits_summaries)
+            summary = "\n".join(bits[0]['summary_text'] for bits in bits_summaries)
+        summary = query({"inputs": summary})[0]['summary_text']
+        summaries.append(summary)
+    print(summaries)
     return summaries
 
 # @traceable
