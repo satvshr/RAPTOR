@@ -24,7 +24,6 @@ def logical_routing_template():
 def semantic_routing_template():
     def choose_files(questions, file_summaries, embedder, threshold=0.35):
         # summaries in the format [[file_name, summary], ..]
-        # print(file_summaries)
         related_files = []
         questions = extract_questions(questions)
         for question in questions:
@@ -35,7 +34,6 @@ def semantic_routing_template():
                 if cosine > threshold:
                     if file[0] not in related_files:
                         related_files.append(file[0])
-        print(related_files)
         return related_files
         
     return choose_files
