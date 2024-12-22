@@ -10,9 +10,10 @@ import numpy as np
 
 def retrieval_template():
     def get_best_nodes(best_cluster_nodes, questions, embedder, top_k=4, reduced_dim=10, threshold=0.1):
-        # questions = extract_questions(questions)
+        questions = extract_questions(questions)
         # list to summarize nodes of each level only
         current_lvl = best_cluster_nodes.copy()
+
         # Build a bottom-up tree and use the collapsed tree approach to ensure best performance
         n_clusters = 0
         while True:
@@ -40,7 +41,7 @@ def retrieval_template():
 
             # Update variable to contain the summaries of only the current level
             current_lvl = cluster_summaries
-            print(len(current_lvl), current_lvl)
+
             # Accumalate all nodes of the entire tree under one level (collapsed tree approach) and append it to a list
             best_cluster_nodes.extend(current_lvl)
 
