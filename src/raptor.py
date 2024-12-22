@@ -2,6 +2,7 @@ from utils.umap import umap
 from utils.gmm import gmm, get_optimal_clusters
 import numpy as np
 from utils.pdf_summarizer import query
+from .indexing import extract_questions
 from utils.find_documents import find_documents
 
 def get_summaries(doc_splits, data_point_to_clusters):
@@ -56,6 +57,7 @@ def raptor_template():
         cluster_summaries = get_summaries(doc_splits, data_point_to_clusters)
 
         # Get the cluster with the highest cosine similarity
+        questions = extract_questions(questions)
         best_cluster = cluster_summaries.index(find_documents(cluster_summaries, questions, embedder)[0])
 
         # Get the nodes for the best cluster
