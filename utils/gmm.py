@@ -112,7 +112,7 @@ def gmm(documents, n_clusters):
 # Get optimal number of clusters using BIC
 def get_optimal_clusters(embeddings, reduced_dim, max_clusters=10):
     bic_scores = []
-    for n_clusters in range(1, max_clusters+1):
+    for n_clusters in range(1, min(len(embeddings), max_clusters+1)):
         _, log_likelihood, _, _, _ = gmm(embeddings, n_clusters)
         mean_params = n_clusters * reduced_dim
         cov_params = n_clusters * (reduced_dim * (reduced_dim + 1) // 2)
