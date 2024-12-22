@@ -28,10 +28,13 @@ def get_summaries(doc_splits, data_point_to_clusters):
             summary = "\n".join(bits[0]['summary_text'] for bits in bits_summaries if isinstance(bits, list)) # Ignore any node which was not summarized because of an API error
         
         # Get the summary of all the nodes' summaries, throw an error if API crashes
-        try:
-            summary = query({"inputs": summary})[0]['summary_text']
-        except KeyError:
-            print("Error: The hugging face summarizer API threw an error")
+        # Keep trying till API gives an appropriate response
+        while True:
+            try:
+                summary = query({"inputs": summary})[0]['summary_text']
+                break
+            except KeyError:
+                print("Error: The hugging face summarizer API threw an error")
         summaries.append(summary)
     print(summaries)
     return summaries
