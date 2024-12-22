@@ -48,12 +48,8 @@ def retrieval_template():
         # Once the number of optimal clusters is 1, get summaries of the nodes in it and append it to the list
         # This is the root node
         summary = "\n".join(node for node in current_lvl)
-        while True:
-            try:
-                summary = query({"inputs": summary})[0]['summary_text']
-                break
-            except KeyError:
-                print("Error: The hugging face summarizer API threw an error")
+        summary = query({"inputs": summary})[0]['summary_text']
+
         best_cluster_nodes.append(summary)
 
         print("Total length of all the nodes in the cluster: ", len(best_cluster_nodes))

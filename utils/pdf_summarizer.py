@@ -12,11 +12,11 @@ API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
 headers = {"Authorization": f"Bearer {summarizer}"}
 
 def query(payload):
-    response = requests.post(API_URL, headers=headers, json=payload)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {"error": f"Request failed with status code {response.status_code}", "message": response.text}
+    while True:
+        response = requests.post(API_URL, headers=headers, json=payload)
+        response = response.json()   
+        if isinstance(response, list):
+            return response
     
 # Extract text from PDF
 def extract_text_from_pdf(pdf_path):
@@ -43,6 +43,7 @@ def summarizer(file):
     pdf_path = rf"C:\Users\satvm\Downloads\{file}.pdf"
     document_text = extract_text_from_pdf(pdf_path)[:MAX_TOKENS] if len(extract_text_from_pdf(pdf_path)) > MAX_TOKENS else extract_text_from_pdf(pdf_path)[:-3] # To remove the number 1 which comes before introduction in all it's different forms
     summary = query({"inputs": document_text})
+
     return [file, summary]
 
 # Get summaries of all files
