@@ -54,6 +54,7 @@ def gmm(documents, n_clusters):
         for i in range(n_clusters):
             for j in range(size):
                 responsibilities[i, j] = gaussian[i, j] / (gaussian_sums[j] + 1e-12) # Prevent division by 0
+        
         return responsibilities, N, dif
 
     # Compute pi, mean, and cov using responsibilities obtained
