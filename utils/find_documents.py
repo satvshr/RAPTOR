@@ -3,7 +3,12 @@ import numpy as np
 def cosine_similarity_search(vectorstore, embedded_question, embedder):
     # List to store cosine similarity scores in the (doc, similarity) format
     doc_cosine_pair = []
-    documents = vectorstore.get()['documents']
+    try:
+        documents = vectorstore.get()['documents']
+    except AttributeError:
+        # If vectorstore does not have a 'get' method, treat it as a list
+        documents = vectorstore
+
     # Calculate cosine similarity for each document
     for doc in documents:
         embedded_doc = embedder.embed_query(doc)

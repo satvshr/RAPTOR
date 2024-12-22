@@ -1,4 +1,3 @@
-from langsmith import Client as traceable
 from langchain_community.vectorstores import Chroma
 from PyPDF2 import PdfReader
 import ast, re
@@ -42,7 +41,6 @@ def get_unique_splits(splits):
             seen.add(split)
     return unique_splits
 
-# @traceable
 def indexing_template():
     def process_questions_and_documents(documents, questions, text_splitter, embedder, top_k):
         # Get the list of files from the output in the form of a string (for logical routing)

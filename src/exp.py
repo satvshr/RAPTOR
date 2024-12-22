@@ -73,6 +73,7 @@ llm_chain_file = RunnableSequence(
     # Raptor retrieval
     RunnableLambda(lambda splits_list: raptor_template()(
         doc_splits=splits_list,
+        questions=translation_output,
         embedder=embedder
     ))
 )

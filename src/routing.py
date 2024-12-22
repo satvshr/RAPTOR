@@ -1,10 +1,7 @@
-from langsmith import Client as traceable
 from langchain.prompts import PromptTemplate
-from utils.pdf_summarizer import get_summaries
-from langchain_community.embeddings import GPT4AllEmbeddings
 import numpy as np
 from .indexing import extract_questions
-# @traceable
+
 # Logical routing
 def logical_routing_template():
     return PromptTemplate(

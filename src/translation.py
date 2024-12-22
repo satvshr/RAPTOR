@@ -1,7 +1,5 @@
-from langsmith import Client as traceable
 from langchain.prompts import PromptTemplate
 
-# @traceable
 def translation_template():
     return PromptTemplate(
         input_variables=["question"],

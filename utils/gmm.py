@@ -1,7 +1,5 @@
 import numpy as np
 import random
-from langchain_community.embeddings import GPT4AllEmbeddings
-from .umap import umap
 
 def gmm(documents, n_clusters):
     # Dimensionality of points
