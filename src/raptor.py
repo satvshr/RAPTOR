@@ -53,6 +53,13 @@ def raptor_template():
         # Create a mapping of cluster to data points in it
         data_point_to_clusters = {i: label.tolist() for i, label in enumerate(labels)}
 
+        # Ensure each cluster has at least one data point
+        for i in range(len(data_point_to_clusters)):
+            if len(data_point_to_clusters[i]) == 0:
+                # Find the data point with the highest probability for this cluster
+                highest_prob_idx = np.argmax(responsibilities[i, :])
+                data_point_to_clusters[i].append(highest_prob_idx)
+
         # Get summaries of all the clusters
         cluster_summaries = get_summaries(doc_splits, data_point_to_clusters)
 
@@ -61,7 +68,7 @@ def raptor_template():
         best_cluster = cluster_summaries.index(find_documents(cluster_summaries, questions, embedder)[0])
 
         # Get the nodes for the best cluster
-        best_cluster_nodes = data_point_to_clusters[best_cluster]
+        best_cluster_nodes = [doc_splits[idx] for idx in data_point_to_clusters[best_cluster]]
 
         return best_cluster_nodes
     
