@@ -10,7 +10,6 @@ from src.indexing import indexing_template
 from src.raptor import raptor_template
 from src.retrieval import retrieval_template
 from src.generation import generation_template
-
 from utils.pdf_summarizer import get_summaries
 
 # Load environment variables
@@ -19,7 +18,7 @@ load_dotenv()
 # Initialize LLM, number of splits to retrieve, text splitter, and the embedder
 lm_studio_llm = LMStudioLLM(path='completions')
 top_k_indexing = 40
-top_k_raptor = 5
+top_k_retrieval = 5
 text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
     chunk_size = 300,
     chunk_overlap = 50
@@ -27,16 +26,16 @@ text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
 embedder = GPT4AllEmbeddings()
 
 # Input question
-question = {'question': "What is twitter sentiment analysis?"}
+question = {'question': input("Please enter your question: ")}
+
+# Gather files
+files = []
+for i in range(int(input("Enter the number of files: "))):
+    files.append(input("Enter file name: "))
 
 # Precompute translation_output
 translation_result = translation_template() | lm_studio_llm
 translation_output = translation_result.invoke(question)
-
-# Gather files
-files = ["1", "2", "3"]
-# for i in range(int(input("Enter the number of files: "))):
-#     files.append(input("Enter file name: "))
 
 # Generate file summaries
 file_summaries = ""
@@ -79,7 +78,8 @@ llm_chain_file = RunnableSequence(
     RunnableLambda(lambda best_cluster_nodes: retrieval_template()(
         best_cluster_nodes=best_cluster_nodes,
         questions=translation_output,
-        embedder=embedder
+        embedder=embedder,
+        top_k=top_k_retrieval
     )) |
     (lambda best_nodes: generation_template().format(
         question=question['question'],

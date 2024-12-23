@@ -1,15 +1,13 @@
-from src.indexing import extract_questions
 from utils.gmm import gmm, get_optimal_clusters
 from utils.umap import umap
 from .raptor import get_summaries
 from utils.pdf_summarizer import query
 from utils.find_documents import find_documents
-from .indexing import get_unique_splits
-from langchain_community.embeddings import GPT4AllEmbeddings
+from .indexing import extract_questions, get_unique_splits
 import numpy as np
 
 def retrieval_template():
-    def get_best_nodes(best_cluster_nodes, questions, embedder, top_k=4, reduced_dim=10, threshold=0.1):
+    def get_best_nodes(best_cluster_nodes, questions, embedder, top_k, reduced_dim=10, threshold=0.1):
         questions = extract_questions(questions)
         # list to summarize nodes of each level only
         current_lvl = best_cluster_nodes.copy()

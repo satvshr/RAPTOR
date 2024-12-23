@@ -1,8 +1,11 @@
 from langchain_community.vectorstores import Chroma
 from PyPDF2 import PdfReader
-import ast, re
+import ast, re, os
+from dotenv import load_dotenv
 from langchain.schema import Document
 from utils.find_documents import find_documents
+
+load_dotenv()
 
 def extract_text_from_pdf(pdf_path):
     reader = PdfReader(pdf_path)
@@ -15,7 +18,7 @@ def split_documents(documents, text_splitter):
 
     for doc in documents:
         # Extract text from the PDF file
-        pdf_text = extract_text_from_pdf(rf"C:\Users\satvm\Downloads\{doc}.pdf")
+        pdf_text = extract_text_from_pdf(rf"{os.getenv('FILE_PATH')}\{doc}.pdf")
         
         # Wrap the text in a document object
         document = Document(page_content=pdf_text)

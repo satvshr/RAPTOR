@@ -40,7 +40,7 @@ def extract_text_from_pdf(pdf_path):
 
 # Send the text to a summarizer
 def summarizer(file):
-    pdf_path = rf"C:\Users\satvm\Downloads\{file}.pdf"
+    pdf_path = rf"{os.getenv('FILE_PATH')}\{file}.pdf"
     document_text = extract_text_from_pdf(pdf_path)[:MAX_TOKENS] if len(extract_text_from_pdf(pdf_path)) > MAX_TOKENS else extract_text_from_pdf(pdf_path)[:-3] # To remove the number 1 which comes before introduction in all it's different forms
     summary = query({"inputs": document_text})
 
