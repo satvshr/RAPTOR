@@ -1,4 +1,4 @@
-# VelociRAPTOR: A RAPTOR RAG Implementation from Scratch
+# VelociRAPTOR🦖: A RAPTOR RAG Implementation from Scratch
 
 Welcome to **VelociRAPTOR**—an end-to-end project combining **RAPTOR RAG** (Retrieval Augmented Generation) techniques with a custom suite of algorithms like GMM, UMAP, EM, and the BIC criterion. Everything here is implemented from scratch. Using **NumPy**.
 
@@ -131,7 +131,5 @@ Splitting into `src` and `utils` keeps the architecture organized and allows for
 ---
 
 ## Demo Video
-
-*(Include a link to your demo video here once available.)*
-
+https://github.com/user-attachments/assets/549abeea-9be2-4720-b945-914cc7248a2d
 ---
