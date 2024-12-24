@@ -1,6 +1,7 @@
 from langchain.prompts import PromptTemplate
 
 def generation_template():
+    print("Generating the answer to the user question using the information obtained...\n")
     return PromptTemplate(
         input_variables=["question", "best_nodes"],
         template="""

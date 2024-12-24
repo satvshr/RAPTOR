@@ -1,6 +1,7 @@
 from langchain.prompts import PromptTemplate
 
 def translation_template():
+    print("\nGenerating multi-query questions...")
     return PromptTemplate(
         input_variables=["question"],
         template="""

@@ -46,6 +46,7 @@ def get_unique_splits(splits):
 
 def indexing_template():
     def process_questions_and_documents(documents, questions, text_splitter, embedder, top_k):
+        print("\nPerforming indexing...")
         # Get the list of files from the output in the form of a string (for logical routing)
         if isinstance(documents, str):
             documents = re.search(r'\[.*?\]', documents).group()
@@ -55,15 +56,13 @@ def indexing_template():
         # Create a Chroma vector store
         vectorstore = Chroma.from_documents(documents=splits, embedding=embedder)
 
-        # Define the retrieval chain
-        def retrieval_chain(questions):
-            questions = extract_questions(questions)
-            sorted_docs = find_documents(vectorstore, questions, embedder)
-            return get_unique_splits(sorted_docs)[:top_k]
+        questions = extract_questions(questions)
+        sorted_docs = find_documents(vectorstore, questions, embedder)
+        results = get_unique_splits(sorted_docs)[:top_k]
 
-        # Invoke the chain with the questions and recieve a list as output
-        results = retrieval_chain(questions)
-
+        print("Finished indexing.")
+        print(f"Obtained the {top_k} unique document splits best matching our question using cosine similarity search.\n")
+        # Results contains the top_k unique document splits that best match the questions
         return results
 
     return process_questions_and_documents
