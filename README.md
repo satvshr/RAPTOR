@@ -12,9 +12,10 @@ We are using the **llama-3.2-3b-instruct** model from **LMStudio** as the LLM Ag
 2. [Setup and Installation](#setup-and-installation)  
 3. [Environment Variables](#environment-variables)  
 4. [Why Two Directories?](#why-two-directories)  
-5. [File Descriptions](#file-descriptions)  
-6. [Demo Video](#demo-video)
-
+5. [File Descriptions](#file-descriptions)
+6. [References](#additional-references)
+7. [Demo Video](#demo-video)
+   
 ---
 
 ## Project Overview
@@ -127,7 +128,20 @@ Splitting into `src` and `utils` keeps the architecture organized and allows for
 
 - **umap.py**  
   Implements **UMAP** from scratch in NumPy for dimensionality reduction, simplified to make it easier to implement.
+  
+---
 
+## Additional References
+- https://medium.com/the-ai-forum/implementing-advanced-rag-in-langchain-using-raptor-258a51c503c6
+- https://spencerporter2.medium.com/understanding-cosine-similarity-and-word-embeddings-dbf19362a3c
+- https://github.com/Ransaka/GMM-from-scratch/blob/master/GMM%20from%20scratch.ipynb
+- https://github.com/NikolayOskolkov/HowUMAPWorks/blob/master/HowUMAPWorks.ipynb
+- https://github.com/langchain-ai/rag-from-scratch/blob/main/rag_from_scratch_12_to_14.ipynb
+- https://github.com/langchain-ai/langchain/blob/master/cookbook/RAPTOR.ipynb
+- https://github.com/parthsarthi03/raptor
+- https://www.youtube.com/watch?v=sVcwVQRHIc8
+- https://www.oranlooney.com/post/ml-from-scratch-part-5-gmm/
+  
 ---
 
 ## Demo Video
