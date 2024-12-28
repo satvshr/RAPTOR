@@ -1,4 +1,4 @@
-# VelociRAPTOR: A RAPTOR RAG Implementation from Scratch
+# VelociRAPTOR🦖: A RAPTOR RAG Implementation from Scratch
 
 Welcome to **VelociRAPTOR**—an end-to-end project combining **RAPTOR RAG** (Retrieval Augmented Generation) techniques with a custom suite of algorithms like GMM, UMAP, EM, and the BIC criterion. Everything here is implemented from scratch. Using **NumPy**.
 
@@ -126,12 +126,11 @@ Splitting into `src` and `utils` keeps the architecture organized and allows for
   Summarizes PDFs by extracting text, chunking it, and optionally using **bart-large-cnn** from Facebook to produce concise summaries.
 
 - **umap.py**  
-  Implements **UMAP** from scratch in NumPy for dimensionality reduction.
+  Implements **UMAP** from scratch in NumPy for dimensionality reduction, simplified to make it easier to implement.
 
 ---
 
 ## Demo Video
-
-*(Include a link to your demo video here once available.)*
+<video src='https://github.com/user-attachments/assets/549abeea-9be2-4720-b945-914cc7248a2d' width=180/>
 
 ---
